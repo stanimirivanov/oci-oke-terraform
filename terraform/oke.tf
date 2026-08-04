@@ -54,7 +54,6 @@ resource "oci_containerengine_cluster" "oke_cluster" {
   options {
     add_ons {
       is_kubernetes_dashboard_enabled = false
-      is_helm_deploy_enabled          = false
     }
     admission_controller_options {
       is_pod_security_policy_enabled = false
