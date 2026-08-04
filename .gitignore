@@ -1,0 +1,27 @@
+### IntelliJ
+/out/
+.idea
+*.iws
+*.iml
+.idea_modules/
+atlassian-ide-plugin.xml
+
+### Visual Studio Code
+.vscode
+
+### Eclipse
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+.project
+*.launch
+.classpath
+.target
