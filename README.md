@@ -53,6 +53,8 @@ end
    - `OCI_CLI_KEY_CONTENT`: Full content of your private `.pem` key.
    - `OCI_CLI_REGION`: Your OCI active region (e.g., `eu-frankfurt-1`).
    - `OCI_COMPARTMENT_OCID`: Target compartment OCID.
+   - `OCI_S3_ACCESS_KEY`: The AWS s3 access key.
+   - `OCI_S3_SECRET_KEY`: The AWS s3 secret key.
 
 ## 💻 Local Execution
 

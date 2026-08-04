@@ -47,7 +47,7 @@ jobs:
           chmod 600 ~/.oci/oci_api_key.pem
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -backend-config="bucket=${{ secrets.OCI_STATE_BUCKET }}"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OCI_S3_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.OCI_S3_SECRET_KEY }}
