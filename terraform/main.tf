@@ -29,24 +29,35 @@ data "oci_containerengine_cluster_kube_config" "oke" {
   cluster_id = oci_containerengine_cluster.oke_cluster.id
 }
 
+# Create a local variable to decode the raw YAML content
+locals {
+  kubeconfig = yamldecode(data.oci_containerengine_cluster_kube_config.oke.content)
+}
+
+# Update the Kubernetes provider
 provider "kubernetes" {
-  host                   = data.oci_containerengine_cluster_kube_config.oke.endpoints[0].graph_endpoint
-  cluster_ca_certificate = base64decode(data.oci_containerengine_cluster_kube_config.oke.clusters[0].cluster.certificate_authority[0].data)
+  host                   = local.kubeconfig.clusters[0].cluster.server
+  cluster_ca_certificate = base64decode(local.kubeconfig.clusters[0].cluster["certificate-authority-data"])
+
+  # OKE typically requires the OCI CLI for authentication.
+  # If you are using the default exec configuration, add this:
   exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "oci"
-    args        = ["ce", "cluster", "generate-token", "--cluster-id", oci_containerengine_cluster.oke_cluster.id]
+    api_version = local.kubeconfig.users[0].user.exec.apiVersion
+    args        = local.kubeconfig.users[0].user.exec.args
+    command     = local.kubeconfig.users[0].user.exec.command
   }
 }
 
+# Update the Helm provider
 provider "helm" {
   kubernetes {
-    host                   = data.oci_containerengine_cluster_kube_config.oke.endpoints[0].graph_endpoint
-    cluster_ca_certificate = base64decode(data.oci_containerengine_cluster_kube_config.oke.clusters[0].cluster.certificate_authority[0].data)
+    host                   = local.kubeconfig.clusters[0].cluster.server
+    cluster_ca_certificate = base64decode(local.kubeconfig.clusters[0].cluster["certificate-authority-data"])
+
     exec {
-      api_version = "client.authentication.k8s.io/v1beta1"
-      command     = "oci"
-      args        = ["ce", "cluster", "generate-token", "--cluster-id", oci_containerengine_cluster.oke_cluster.id]
+      api_version = local.kubeconfig.users[0].user.exec.apiVersion
+      args        = local.kubeconfig.users[0].user.exec.args
+      command     = local.kubeconfig.users[0].user.exec.command
     }
   }
 }

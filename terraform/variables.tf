@@ -5,7 +5,7 @@ variable "project_prefix" {
 }
 
 variable "tenancy_ocid" {
-  description = "OCID of your OCI Tenancy"
+  description = "OCID of the OCI Tenancy"
   type        = string
 }
 

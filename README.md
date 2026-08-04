@@ -44,13 +44,13 @@ end
 ## 🛠️ Prerequisites
 
 1. An **Oracle Cloud Infrastructure (OCI)** account.
-2. An **API Key Pair** generated in your OCI User Settings.
+2. An **API Key Pair** generated in the OCI User Settings.
 3. A **GitHub Repository Environment** named `oci-infrastructure` with the
    following secrets:
    - `OCI_CLI_USER`: Your OCI User OCID.
    - `OCI_CLI_TENANCY`: Your OCI Tenancy OCID.
    - `OCI_CLI_FINGERPRINT`: OCI API Key fingerprint.
-   - `OCI_CLI_KEY_CONTENT`: Full content of your private `.pem` key.
+   - `OCI_CLI_KEY_CONTENT`: Full content of the private `.pem` key.
    - `OCI_CLI_REGION`: Your OCI active region (e.g., `eu-frankfurt-1`).
    - `OCI_COMPARTMENT_OCID`: Target compartment OCID.
    - `OCI_S3_ACCESS_KEY`: The AWS s3 access key.
@@ -71,7 +71,7 @@ To test or apply the Terraform code locally:
    terraform plan
    terraform apply
    ```
-3. Connect `kubectl` to your cluster:
+3. Connect `kubectl` to the cluster:
    Run the command provided in `terraform output get_kubeconfig_command`.
 
 ## 🚀 CI/CD Pipeline

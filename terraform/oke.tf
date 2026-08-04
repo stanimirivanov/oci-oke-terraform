@@ -2,7 +2,7 @@
 # Data Sources: Dynamic Region, Version & Image Lookup
 # ==============================================================================
 
-# Get Availability Domains in your active region
+# Get Availability Domains in the active region
 data "oci_identity_availability_domains" "ads" {
   compartment_id = var.compartment_ocid
 }
