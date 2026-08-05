@@ -1,4 +1,4 @@
-name: "Terraform Multi-Stage Deployment"
+name: "Terragrunt Deployment Pipeline"
 
 on:
   push:
@@ -7,49 +7,12 @@ on:
   pull_request:
 
 jobs:
-  stage1-infrastructure:
-    name: "Stage 1: Provision OCI Cluster"
+  terragrunt:
+    name: "Terragrunt Run-All"
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./terraform/01-infrastructure
-    outputs:
-      cluster_id: ${{ steps.output.outputs.cluster_id }}
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-
-      - name: Terraform Init
-        run: terraform init -backend-config="bucket=${{ secrets.OCI_STATE_BUCKET }}"
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.OCI_S3_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.OCI_S3_SECRET_KEY }}
-
-      - name: Terraform Apply
-        run: |
-          terraform apply -auto-approve
-          echo "cluster_id=$(terraform output -raw cluster_ocid)" >> $GITHUB_OUTPUT
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.OCI_S3_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.OCI_S3_SECRET_KEY }}
-          TF_VAR_project_prefix: "kishu"
-          TF_VAR_tenancy_ocid: ${{ secrets.OCI_CLI_TENANCY }}
-          TF_VAR_user_ocid: ${{ secrets.OCI_CLI_USER }}
-          TF_VAR_fingerprint: ${{ secrets.OCI_CLI_FINGERPRINT }}
-          TF_VAR_region: ${{ secrets.OCI_CLI_REGION }}
-          TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
-
-  stage2-tekton:
-    name: "Stage 2: Deploy Tekton Helm Chart"
-    needs: stage1-infrastructure
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./terraform/02-k8s-tekton
+        working-directory: ./terraform
 
     steps:
       - name: Checkout Code
@@ -67,19 +30,16 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
 
-      - name: Terraform Init
-        run: terraform init -backend-config="bucket=${{ secrets.OCI_STATE_BUCKET }}"
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.OCI_S3_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.OCI_S3_SECRET_KEY }}
+      - name: Setup Terragrunt
+        uses: autero1/action-terragrunt@v3
+        with:
+          terragrunt_version: latest
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
+      - name: Terragrunt Apply All
+        run: terragrunt run-all apply --terragrunt-non-interactive
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OCI_S3_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.OCI_S3_SECRET_KEY }}
-          TF_VAR_cluster_id: ${{ needs.stage1-infrastructure.outputs.cluster_id }}
-          TF_VAR_project_prefix: "kishu"
           TF_VAR_tenancy_ocid: ${{ secrets.OCI_CLI_TENANCY }}
           TF_VAR_user_ocid: ${{ secrets.OCI_CLI_USER }}
           TF_VAR_fingerprint: ${{ secrets.OCI_CLI_FINGERPRINT }}

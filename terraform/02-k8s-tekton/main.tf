@@ -1,6 +1,5 @@
 terraform {
   required_version = ">= 1.3.0"
-
   required_providers {
     oci = {
       source  = "oracle/oci"
@@ -17,25 +16,18 @@ terraform {
   }
 }
 
-provider "oci" {
-  tenancy_ocid     = var.tenancy_ocid
-  user_ocid        = var.user_ocid
-  fingerprint      = var.fingerprint
-  private_key_path = var.private_key_path
-  region           = var.region
+variable "cluster_id" {
+  type = string
 }
 
-# Fetch kubeconfig of the ALREADY CREATED cluster from Stage 1
 data "oci_containerengine_cluster_kube_config" "oke" {
   cluster_id = var.cluster_id
 }
 
-# Create a local variable to decode the raw YAML content
 locals {
   kubeconfig = yamldecode(data.oci_containerengine_cluster_kube_config.oke.content)
 }
 
-# Update the Kubernetes provider
 provider "kubernetes" {
   host                   = local.kubeconfig.clusters[0].cluster.server
   cluster_ca_certificate = base64decode(local.kubeconfig.clusters[0].cluster["certificate-authority-data"])
@@ -47,7 +39,6 @@ provider "kubernetes" {
   }
 }
 
-# Update the Helm provider
 provider "helm" {
   kubernetes {
     host                   = local.kubeconfig.clusters[0].cluster.server
