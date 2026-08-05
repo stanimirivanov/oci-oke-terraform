@@ -47,13 +47,8 @@ jobs:
       TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Setup Terraform & Terragrunt
-        uses: autero1/action-terragrunt@v3
-        with:
-          terragrunt-version: latest
+      - name: Setup Environment
+        uses: ./.github/actions/setup-tools
 
       - name: Terragrunt Plan
         run: terragrunt run --all plan
@@ -78,13 +73,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform & Terragrunt
-        uses: autero1/action-terragrunt@v3
-        with:
-          terragrunt-version: latest
+      - name: Setup Environment
+        uses: ./.github/actions/setup-tools
 
       - name: Download errored state artifacts
         uses: actions/download-artifact@v4
