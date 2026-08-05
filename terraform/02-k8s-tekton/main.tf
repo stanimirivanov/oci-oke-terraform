@@ -1,17 +1,18 @@
 terraform {
-  required_version = ">= 1.5.0"
+  required_version = ">= 1.3.0"
+
   required_providers {
     oci = {
       source  = "oracle/oci"
-      version = "~> 6.0"
+      version = ">= 5.0.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.25"
+      version = ">= 2.20.0"
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "~> 2.12"
+      version = ">= 2.9.0"
     }
   }
 }
@@ -24,9 +25,9 @@ provider "oci" {
   region           = var.region
 }
 
-# Fetch cluster credentials dynamically for K8s & Helm providers
+# Fetch kubeconfig of the ALREADY CREATED cluster from Stage 1
 data "oci_containerengine_cluster_kube_config" "oke" {
-  cluster_id = oci_containerengine_cluster.oke_cluster.id
+  cluster_id = var.cluster_id
 }
 
 # Create a local variable to decode the raw YAML content
@@ -39,12 +40,10 @@ provider "kubernetes" {
   host                   = local.kubeconfig.clusters[0].cluster.server
   cluster_ca_certificate = base64decode(local.kubeconfig.clusters[0].cluster["certificate-authority-data"])
 
-  # OKE typically requires the OCI CLI for authentication.
-  # If you are using the default exec configuration, add this:
   exec {
-    api_version = local.kubeconfig.users[0].user.exec.apiVersion
-    args        = local.kubeconfig.users[0].user.exec.args
-    command     = local.kubeconfig.users[0].user.exec.command
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "oci"
+    args        = ["ce", "cluster", "generate-token", "--cluster-id", var.cluster_id, "--region", var.region]
   }
 }
 
@@ -55,9 +54,9 @@ provider "helm" {
     cluster_ca_certificate = base64decode(local.kubeconfig.clusters[0].cluster["certificate-authority-data"])
 
     exec {
-      api_version = local.kubeconfig.users[0].user.exec.apiVersion
-      args        = local.kubeconfig.users[0].user.exec.args
-      command     = local.kubeconfig.users[0].user.exec.command
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "oci"
+      args        = ["ce", "cluster", "generate-token", "--cluster-id", var.cluster_id, "--region", var.region]
     }
   }
 }
