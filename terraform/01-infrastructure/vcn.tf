@@ -64,25 +64,40 @@ resource "oci_core_network_security_group_security_rule" "api_ingress_worker_644
   protocol                  = "6" # TCP
   source                    = oci_core_subnet.node_subnet.cidr_block
   source_type                = "CIDR_BLOCK"
-  tcp_options { destination_port_range { min = 6443; max = 6443 } }
+  tcp_options {
+    destination_port_range {
+      min = 6443
+      max = 6443
+    }
+  }
 }
 
 resource "oci_core_network_security_group_security_rule" "api_ingress_worker_12250" {
   network_security_group_id = oci_core_network_security_group.api_endpoint_nsg.id
   direction                 = "INGRESS"
-  protocol                  = "6"
+  protocol                  = "6" # TCP
   source                    = oci_core_subnet.node_subnet.cidr_block
   source_type                = "CIDR_BLOCK"
-  tcp_options { destination_port_range { min = 12250; max = 12250 } }
+  tcp_options {
+    destination_port_range {
+      min = 12250
+      max = 12250
+    }
+  }
 }
 
 resource "oci_core_network_security_group_security_rule" "api_ingress_public_6443" {
   network_security_group_id = oci_core_network_security_group.api_endpoint_nsg.id
   direction                 = "INGRESS"
-  protocol                  = "6"
+  protocol                  = "6" # TCP
   source                    = "0.0.0.0/0"   # tighten to your IP/CIDR if you want kubectl access restricted
   source_type                = "CIDR_BLOCK"
-  tcp_options { destination_port_range { min = 6443; max = 6443 } }
+  tcp_options {
+    destination_port_range {
+      min = 6443
+      max = 6443
+    }
+  }
 }
 
 resource "oci_core_network_security_group_security_rule" "api_egress_all" {
@@ -111,10 +126,15 @@ resource "oci_core_network_security_group_security_rule" "node_ingress_self_all"
 resource "oci_core_network_security_group_security_rule" "node_ingress_api_10250" {
   network_security_group_id = oci_core_network_security_group.node_nsg.id
   direction                 = "INGRESS"
-  protocol                  = "6"
+  protocol                  = "6" # TCP
   source                    = oci_core_subnet.k8s_endpoint_subnet.cidr_block
   source_type                = "CIDR_BLOCK"
-  tcp_options { destination_port_range { min = 10250; max = 10250 } }
+  tcp_options {
+    destination_port_range {
+      min = 10250
+      max = 10250
+    }
+  }
 }
 
 resource "oci_core_network_security_group_security_rule" "node_ingress_nodeports" {

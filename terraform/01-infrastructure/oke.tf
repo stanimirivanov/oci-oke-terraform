@@ -71,8 +71,7 @@ resource "oci_containerengine_node_pool" "oke_node_pool" {
   compartment_id     = var.compartment_ocid
   name               = "${var.project_prefix}-arm-pool"
   kubernetes_version = local.kubernetes_version
-  # Always Free Ampere ARM Flex Shape
-  node_shape         = "VM.Standard.A1.Flex"
+  node_shape         = "VM.Standard.A1.Flex" # Always Free Ampere ARM Flex Shape
 
   # Always Free Allowance Limit: 4 OCPUs and 24 GB RAM total across tenancy.
   # Split across size = 2 nodes: 2 OCPUs & 12 GB RAM per node.
@@ -92,7 +91,7 @@ resource "oci_containerengine_node_pool" "oke_node_pool" {
       subnet_id           = oci_core_subnet.node_subnet.id
     }
     nsg_ids = [oci_core_network_security_group.node_nsg.id]
-    size = 2
+    size    = 2
   }
 
   initial_node_labels {
