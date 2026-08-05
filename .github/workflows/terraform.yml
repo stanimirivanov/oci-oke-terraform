@@ -10,9 +10,13 @@ jobs:
   terragrunt:
     name: "Terragrunt Run-All"
     runs-on: ubuntu-latest
+    environment: oci-infrastructure
     defaults:
       run:
         working-directory: ./terraform
+
+    # Strictly allow ONLY the repository owner
+    if: github.actor == github.repository_owner
 
     steps:
       - name: Checkout Code
