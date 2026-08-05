@@ -31,11 +31,11 @@ generate "provider" {
   if_exists = "overwrite_terragrunt"
   contents  = <<EOF
 provider "oci" {
-  tenancy_ocid     = var.tenancy_ocid
-  user_ocid        = var.user_ocid
-  fingerprint      = var.fingerprint
-  private_key_path = var.private_key_path
-  region           = var.region
+  tenancy_ocid = var.tenancy_ocid
+  user_ocid    = var.user_ocid
+  fingerprint  = var.fingerprint
+  private_key  = var.private_key
+  region       = var.region
 }
 EOF
 }
@@ -46,7 +46,7 @@ inputs = {
   tenancy_ocid     = get_env("TF_VAR_tenancy_ocid")
   user_ocid        = get_env("TF_VAR_user_ocid")
   fingerprint      = get_env("TF_VAR_fingerprint")
-  private_key_path = "~/.oci/oci_api_key.pem"
-  region           = "eu-frankfurt-1"
+  private_key      = get_env("TF_VAR_private_key")
+  region           = get_env("TF_VAR_region")
   compartment_ocid = get_env("TF_VAR_compartment_ocid")
 }

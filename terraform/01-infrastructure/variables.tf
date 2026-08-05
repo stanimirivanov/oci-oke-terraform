@@ -19,10 +19,10 @@ variable "fingerprint" {
   type        = string
 }
 
-variable "private_key_path" {
-  description = "Path to the private PEM key for OCI authentication"
+variable "private_key" {
+  description = "PEM contents of the OCI API signing key"
   type        = string
-  default     = "~/.oci/oci_api_key.pem"
+  sensitive   = true
 }
 
 variable "region" {

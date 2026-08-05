@@ -50,3 +50,85 @@ resource "oci_core_subnet" "node_subnet" {
   dns_label         = "${local.dns_prefix}nodes"
   route_table_id    = oci_core_route_table.rt.id
 }
+
+# --- API Endpoint NSG ---
+resource "oci_core_network_security_group" "api_endpoint_nsg" {
+  compartment_id = var.compartment_ocid
+  vcn_id         = oci_core_vcn.oke_vcn.id
+  display_name   = "${var.project_prefix}-api-endpoint-nsg"
+}
+
+resource "oci_core_network_security_group_security_rule" "api_ingress_worker_6443" {
+  network_security_group_id = oci_core_network_security_group.api_endpoint_nsg.id
+  direction                 = "INGRESS"
+  protocol                  = "6" # TCP
+  source                    = oci_core_subnet.node_subnet.cidr_block
+  source_type                = "CIDR_BLOCK"
+  tcp_options { destination_port_range { min = 6443; max = 6443 } }
+}
+
+resource "oci_core_network_security_group_security_rule" "api_ingress_worker_12250" {
+  network_security_group_id = oci_core_network_security_group.api_endpoint_nsg.id
+  direction                 = "INGRESS"
+  protocol                  = "6"
+  source                    = oci_core_subnet.node_subnet.cidr_block
+  source_type                = "CIDR_BLOCK"
+  tcp_options { destination_port_range { min = 12250; max = 12250 } }
+}
+
+resource "oci_core_network_security_group_security_rule" "api_ingress_public_6443" {
+  network_security_group_id = oci_core_network_security_group.api_endpoint_nsg.id
+  direction                 = "INGRESS"
+  protocol                  = "6"
+  source                    = "0.0.0.0/0"   # tighten to your IP/CIDR if you want kubectl access restricted
+  source_type                = "CIDR_BLOCK"
+  tcp_options { destination_port_range { min = 6443; max = 6443 } }
+}
+
+resource "oci_core_network_security_group_security_rule" "api_egress_all" {
+  network_security_group_id = oci_core_network_security_group.api_endpoint_nsg.id
+  direction                 = "EGRESS"
+  protocol                  = "all"
+  destination                = "0.0.0.0/0"
+  destination_type           = "CIDR_BLOCK"
+}
+
+# --- Worker Node NSG ---
+resource "oci_core_network_security_group" "node_nsg" {
+  compartment_id = var.compartment_ocid
+  vcn_id         = oci_core_vcn.oke_vcn.id
+  display_name   = "${var.project_prefix}-node-nsg"
+}
+
+resource "oci_core_network_security_group_security_rule" "node_ingress_self_all" {
+  network_security_group_id = oci_core_network_security_group.node_nsg.id
+  direction                 = "INGRESS"
+  protocol                  = "all"
+  source                    = oci_core_subnet.node_subnet.cidr_block
+  source_type                = "CIDR_BLOCK"
+}
+
+resource "oci_core_network_security_group_security_rule" "node_ingress_api_10250" {
+  network_security_group_id = oci_core_network_security_group.node_nsg.id
+  direction                 = "INGRESS"
+  protocol                  = "6"
+  source                    = oci_core_subnet.k8s_endpoint_subnet.cidr_block
+  source_type                = "CIDR_BLOCK"
+  tcp_options { destination_port_range { min = 10250; max = 10250 } }
+}
+
+resource "oci_core_network_security_group_security_rule" "node_ingress_nodeports" {
+  network_security_group_id = oci_core_network_security_group.node_nsg.id
+  direction                 = "INGRESS"
+  protocol                  = "all"
+  source                    = "0.0.0.0/0"   # for OCI LoadBalancer -> nodeports; tighten if not exposing services externally
+  source_type                = "CIDR_BLOCK"
+}
+
+resource "oci_core_network_security_group_security_rule" "node_egress_all" {
+  network_security_group_id = oci_core_network_security_group.node_nsg.id
+  direction                 = "EGRESS"
+  protocol                  = "all"
+  destination                = "0.0.0.0/0"
+  destination_type           = "CIDR_BLOCK"
+}

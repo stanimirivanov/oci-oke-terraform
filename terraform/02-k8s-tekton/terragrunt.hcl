@@ -1,10 +1,10 @@
 include "root" {
-  path = find_in_parent_folders("terragrunt.hcl")
+  path = find_in_parent_folders("root.hcl")
 }
 
 # Automatically wire the output of the infrastructure module as an input variable here
 dependency "infrastructure" {
-  config_path = "../infrastructure"
+  config_path = "../01-infrastructure"
 
   # Mock outputs allow terragrunt plan/validate to pass before infrastructure is created
   mock_outputs = {
