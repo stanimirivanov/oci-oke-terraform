@@ -11,8 +11,16 @@ on:
       - 'terraform/**'
   workflow_dispatch:
 
+env:
+  # S3 Remote State Backend
+  AWS_ACCESS_KEY_ID: ${{ secrets.OCI_S3_ACCESS_KEY }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.OCI_S3_SECRET_KEY }}
+
+  # Terragrunt Non-Interactive Flag
+  TG_NON_INTERACTIVE: true
+
 jobs:
-  terragrunt:
+  apply:
     name: "Terragrunt Plan & Apply"
     runs-on: ubuntu-latest
     environment: oci-infrastructure
@@ -23,10 +31,6 @@ jobs:
         working-directory: ./terraform
 
     env:
-      # S3 Remote State Backend
-      AWS_ACCESS_KEY_ID: ${{ secrets.OCI_S3_ACCESS_KEY }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.OCI_S3_SECRET_KEY }}
-
       # Standard OCI SDK/CLI Variables. Natively read by the Terraform OCI Provider
       OCI_CLI_USER: ${{ secrets.OCI_CLI_USER }}
       OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
@@ -42,16 +46,10 @@ jobs:
       TF_VAR_region: ${{ secrets.OCI_CLI_REGION }}
       TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
 
-      # Terragrunt CLI
-      TG_NON_INTERACTIVE: true
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-#      - name: Setup Terraform
-#        uses: hashicorp/setup-terraform@v3
-#
 #      - name: Setup Terragrunt
 #        uses: autero1/action-terragrunt@v3
 #        with:
@@ -64,3 +62,43 @@ jobs:
 #      - name: Terragrunt Apply
 #        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
 #        run: terragrunt run --all apply
+#      - name: Upload errored state artifact
+#          if: failure()
+#          uses: actions/upload-artifact@v4
+#          with:
+#            name: errored-tfstates
+#            path: "**/errored.tfstate"
+#            if-no-files-found: ignore
+#            retention-days: 3
+
+  recover:
+    needs: apply
+#    if: failure()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform & Terragrunt
+        uses: autero1/action-terragrunt@v3
+        with:
+          terragrunt-version: latest
+
+      - name: Download errored state artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: errored-tfstates
+        continue-on-error: true
+
+      - name: Push state files to OCI Object Storage
+        run: |
+          find terraform -type f -name "errored.tfstate" | while read -r tfstate_file; do
+            module_dir=$(dirname "$tfstate_file")
+            echo "=== Recovering state for module: $module_dir ==="
+            cd "$module_dir"
+            terragrunt init -reconfigure
+            terragrunt state push errored.tfstate
+            rm errored.tfstate
+            cd - > /dev/null
+          done
