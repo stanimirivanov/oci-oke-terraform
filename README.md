@@ -7,52 +7,54 @@ Pipelines Engine**.
 
 ## 🏗️ Architecture
 
-+------------------------------------------+
-|         GitHub Actions Workflow          |
-|          (terraform.yml)                 |
-+--------------------+---------------------+
-|
-Terraform | Apply
-v
-+----------------------------------------------------------------------------------+
-| Oracle Cloud Infrastructure (OCI)                                                |
-|                                                                                  |
-|  +----------------------------------------------------------------------------+  |
-|  | Virtual Cloud Network (10.0.0.0/16)                                        |  |
-|  |                                                                            |  |
-|  |  +--------------------------------+   +---------------------------------+  |  |
-|  |  | API Endpoint Subnet            |   | Worker Node Subnet              |  |  |
-|  |  | (10.0.0.0/28)                  |   | (10.0.10.0/24)                  |  |  |
-|  |  +---------------+----------------+   +----------------+----------------+  |  |
-|  +------------------|-------------------------------------|-------------------+  |
-|                     v                                     v                      |
-|  +----------------------------------------------------------------------------+  |
-|  | Oracle Container Engine for Kubernetes (OKE) - Basic Cluster ($0/mo)       |  |
-|  |                                                                            |  |
-|  |  +----------------------------------------------------------------------+  |  |
-|  |  | Node Pool: Ampere ARM (VM.Standard.A1.Flex)                          |  |  |
-|  |  | 2 Nodes | Total: 4 OCPUs & 24 GB RAM (Always Free Cap)               |  |  |
-|  |  +----------------------------------+-----------------------------------+  |  |
-|  +-------------------------------------|--------------------------------------+  |
-|                                        v                                         |
-|  +----------------------------------------------------------------------------+  |
-|  | Namespace: tekton-pipelines                                                |  |
-|  |  - Installed automatically via Helm/Terraform                              |  |
-|  +----------------------------------------------------------------------------+  |
-+----------------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+subgraph CICD["GitHub Actions Workflow"]
+GHA["<code>terraform.yml</code>"]
+end
+
+    subgraph OCI["Oracle Cloud Infrastructure (OCI)"]
+        
+        subgraph VCN["Virtual Cloud Network (10.0.0.0/16)"]
+            APISubnet["API Endpoint Subnet<br/><code>10.0.0.0/28</code>"]
+            NodeSubnet["Worker Node Subnet<br/><code>10.0.10.0/24</code>"]
+        end
+
+        subgraph OKE["Oracle Container Engine for Kubernetes (OKE)"]
+            Cluster["Basic Cluster ($0/mo)"]
+            
+            subgraph NP["Node Pool: Ampere ARM (VM.Standard.A1.Flex)"]
+                Resources["2 Nodes | Total: 4 OCPUs & 24 GB RAM<br/><i>(Always Free Cap)</i>"]
+            end
+
+            subgraph TektonNS["Namespace: tekton-pipelines"]
+                TektonEngine["Tekton Engine<br/><i>(Installed automatically via Helm/Terraform)</i>"]
+            end
+        end
+    end
+
+    %% Flows
+    GHA ==>|"Terraform Apply"| OCI
+    APISubnet -.->|"Endpoint Binding"| Cluster
+    NodeSubnet -.->|"Node Placement"| NP
+    Cluster --- NP
+    NP --- TektonNS
+```
 
 ## 🛠️ Prerequisites
 
 1. An **Oracle Cloud Infrastructure (OCI)** account.
-2. An **API Key Pair** generated in your OCI User Settings.
+2. An **API Key Pair** generated in the OCI User Settings.
 3. A **GitHub Repository Environment** named `oci-infrastructure` with the
    following secrets:
    - `OCI_CLI_USER`: Your OCI User OCID.
    - `OCI_CLI_TENANCY`: Your OCI Tenancy OCID.
    - `OCI_CLI_FINGERPRINT`: OCI API Key fingerprint.
-   - `OCI_CLI_KEY_CONTENT`: Full content of your private `.pem` key.
+   - `OCI_CLI_KEY_CONTENT`: Full content of the private `.pem` key.
    - `OCI_CLI_REGION`: Your OCI active region (e.g., `eu-frankfurt-1`).
    - `OCI_COMPARTMENT_OCID`: Target compartment OCID.
+   - `OCI_S3_ACCESS_KEY`: The AWS s3 access key.
+   - `OCI_S3_SECRET_KEY`: The AWS s3 secret key.
 
 ## 💻 Local Execution
 
@@ -69,7 +71,7 @@ To test or apply the Terraform code locally:
    terraform plan
    terraform apply
    ```
-3. Connect `kubectl` to your cluster:
+3. Connect `kubectl` to the cluster:
    Run the command provided in `terraform output get_kubeconfig_command`.
 
 ## 🚀 CI/CD Pipeline
