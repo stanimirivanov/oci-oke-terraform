@@ -21,7 +21,6 @@ env:
 
 jobs:
   apply:
-    name: "Terragrunt Plan & Apply"
     runs-on: ubuntu-latest
     environment: oci-infrastructure
     if: github.actor == github.repository_owner
@@ -47,6 +46,9 @@ jobs:
       TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup Environment
         uses: ./.github/actions/setup-tools
 
@@ -73,6 +75,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup Environment
         uses: ./.github/actions/setup-tools
 
