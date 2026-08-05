@@ -49,18 +49,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Setup Terragrunt
-        uses: autero1/action-terragrunt@v3
-        with:
-          terragrunt-version: 1.1.2
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Terragrunt Plan
-        run: terragrunt run --all plan
-
-      - name: Terragrunt Apply
-        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-        run: terragrunt run --all apply
+#      - name: Setup Terraform
+#        uses: hashicorp/setup-terraform@v3
+#
+#      - name: Setup Terragrunt
+#        uses: autero1/action-terragrunt@v3
+#        with:
+#          terragrunt-version: 1.1.2
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Terragrunt Plan
+#        run: terragrunt run --all plan
+#
+#      - name: Terragrunt Apply
+#        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+#        run: terragrunt run --all apply
