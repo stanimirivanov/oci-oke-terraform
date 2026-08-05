@@ -21,7 +21,6 @@ env:
 
 jobs:
   apply:
-    name: "Terragrunt Plan & Apply"
     runs-on: ubuntu-latest
     environment: oci-infrastructure
     if: github.actor == github.repository_owner
@@ -47,43 +46,40 @@ jobs:
       TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-#      - name: Setup Terragrunt
-#        uses: autero1/action-terragrunt@v3
-#        with:
-#          terragrunt-version: 1.1.2
-#          token: ${{ secrets.GITHUB_TOKEN }}
-#
-#      - name: Terragrunt Plan
-#        run: terragrunt run --all plan
-#
-#      - name: Terragrunt Apply
-#        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-#        run: terragrunt run --all apply
-#      - name: Upload errored state artifact
-#          if: failure()
-#          uses: actions/upload-artifact@v4
-#          with:
-#            name: errored-tfstates
-#            path: "**/errored.tfstate"
-#            if-no-files-found: ignore
-#            retention-days: 3
+      - name: Setup Environment
+        uses: ./.github/actions/setup-tools
+
+      - name: Terragrunt Plan
+        run: terragrunt run --all plan
+
+      - name: Terragrunt Apply
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        run: terragrunt run --all apply
+
+      - name: Upload errored state artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: errored-tfstates
+          path: "**/errored.tfstate"
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 3
 
   recover:
     needs: apply
-#    if: failure()
+    if: failure()
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Terraform & Terragrunt
-        uses: autero1/action-terragrunt@v3
-        with:
-          terragrunt-version: latest
+      - name: Setup Environment
+        uses: ./.github/actions/setup-tools
 
       - name: Download errored state artifacts
         uses: actions/download-artifact@v4
