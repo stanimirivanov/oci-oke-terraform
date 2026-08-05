@@ -1,0 +1,46 @@
+name: "Terragrunt Recovery"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  terragrunt:
+    name: "Terragrunt Recovery"
+    runs-on: ubuntu-latest
+    environment: oci-infrastructure
+    if: github.actor == github.repository_owner
+
+    defaults:
+      run:
+        working-directory: ./terraform
+
+    env:
+      # S3 Remote State Backend
+      AWS_ACCESS_KEY_ID: ${{ secrets.OCI_S3_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.OCI_S3_SECRET_KEY }}
+
+      # Terragrunt Non-Interactive Flag
+      TG_NON_INTERACTIVE: true
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Download errored state artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: errored-tfstates
+
+      - name: Recover state files across all modules
+        run: |
+          # Find all restored errored.tfstate files dynamically
+          find terraform -type f -name "errored.tfstate" | while read -r tfstate_file; do
+            module_dir=$(dirname "$tfstate_file")
+            echo "=== Recovering state for module: $module_dir ==="
+          
+            cd "$module_dir"
+            terragrunt init -reconfigure
+            terragrunt state push errored.tfstate
+            rm errored.tfstate
+            cd - > /dev/null
+          done
