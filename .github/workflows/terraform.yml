@@ -89,12 +89,19 @@ jobs:
 
       - name: Push state files to OCI Object Storage
         run: |
-          find terraform -type f -name "errored.tfstate" | while read -r tfstate_file; do
-            module_dir=$(dirname "$tfstate_file")
+          find terraform -name "errored.tfstate" | while read -r tfstate_path; do
+            # Extract the actual module directory by stripping out .terragrunt-cache
+            # e.g., 'terraform/01-infrastructure/.terragrunt-cache/...' becomes 'terraform/01-infrastructure'
+            module_dir=$(echo "$tfstate_path" | sed 's|\/\.terragrunt-cache/.*||')
+          
             echo "=== Recovering state for module: $module_dir ==="
+          
+            # Copy errored.tfstate to the module root where terragrunt.hcl lives
+            cp "$tfstate_path" "$module_dir/errored.tfstate"
+          
             cd "$module_dir"
             terragrunt init -reconfigure
             terragrunt state push errored.tfstate
-            rm errored.tfstate
+            rm -f errored.tfstate
             cd - > /dev/null
           done
