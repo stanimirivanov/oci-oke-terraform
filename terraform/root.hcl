@@ -1,6 +1,6 @@
 locals {
   region                  = "eu-frankfurt-1"
-  object_storage_endpoint = "https://ax1b2c3d4e5f.compat.objectstorage.eu-frankfurt-1.oraclecloud.com"
+  object_storage_endpoint = "https://frx6hbt3t4bu.compat.objectstorage.eu-frankfurt-1.oraclecloud.com"
   bucket_name             = "kishu-tf-state"
 }
 
