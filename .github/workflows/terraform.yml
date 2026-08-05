@@ -55,8 +55,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Terragrunt Plan
-        run: terragrunt run-all plan --terragrunt-non-interactive
+        run: terragrunt run --all plan --terragrunt-non-interactive
 
       - name: Terragrunt Apply
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-        run: terragrunt run-all apply --terragrunt-non-interactive
+        run: terragrunt run --all apply --terragrunt-non-interactive
