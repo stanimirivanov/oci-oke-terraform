@@ -86,9 +86,12 @@ resource "oci_containerengine_node_pool" "oke_node_pool" {
   }
 
   node_config_details {
-    placement_configs {
-      availability_domain = data.oci_identity_availability_domains.ads.availability_domains[0].name
-      subnet_id           = oci_core_subnet.node_subnet.id
+    dynamic "placement_configs" {
+      for_each = data.oci_identity_availability_domains.ads.availability_domains
+      content {
+        availability_domain = placement_configs.value.name
+        subnet_id           = oci_core_subnet.node_subnet.id
+      }
     }
     nsg_ids = [oci_core_network_security_group.node_nsg.id]
     size    = 2
