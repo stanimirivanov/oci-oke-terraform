@@ -23,12 +23,12 @@ locals {
   # Select the latest Kubernetes version supported by OKE
   kubernetes_version = reverse(sort(data.oci_containerengine_cluster_option.oke_options.kubernetes_versions))[0]
 
-  # Filter images specifically for ARM (aarch64) architecture compatible with OKE
+  # Target official OKE worker images for ARM (aarch64) architecture
   arm_node_images = [
     for image in data.oci_containerengine_node_pool_option.node_options.sources :
-    image.image_id if length(regexall("aarch64", image.source_name)) > 0
+    image.image_id if length(regexall("aarch64.*OKE|Oracle-Linux-.*aarch64", image.source_name)) > 0
   ]
-  node_image_id = local.arm_node_images[0]
+  node_image_id = length(local.arm_node_images) > 0 ? local.arm_node_images[0] : data.oci_containerengine_node_pool_option.node_options.sources[0].image_id
 }
 
 # ==============================================================================
@@ -92,6 +92,12 @@ resource "oci_containerengine_node_pool" "oke_node_pool" {
     }
     nsg_ids = [oci_core_network_security_group.node_nsg.id]
     size    = 2
+
+    # Add required pod network configuration to match OCI_VCN_IP_NATIVE CNI
+    node_pool_pod_network_option_details {
+      cni_type       = "OCI_VCN_IP_NATIVE"
+      pod_subnet_ids = [oci_core_subnet.pod_subnet.id]
+    }
   }
 
   initial_node_labels {
