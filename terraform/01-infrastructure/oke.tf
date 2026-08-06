@@ -76,8 +76,8 @@ resource "oci_containerengine_node_pool" "oke_node_pool" {
   # Always Free Allowance Limit: 4 OCPUs and 24 GB RAM total across tenancy.
   # Split across size = 2 nodes: 2 OCPUs & 12 GB RAM per node.
   node_shape_config {
-    ocpus         = 2
-    memory_in_gbs = 12
+    ocpus         = 1
+    memory_in_gbs = 8
   }
 
   node_source_details {
