@@ -83,7 +83,7 @@ jobs:
           script: |
             import json
             import os
-            
+
             # Load Plan Report
             planned_units = {}
             if os.path.exists('plan_report.json'):
@@ -92,7 +92,7 @@ jobs:
                     units = data if isinstance(data, list) else data.get('units', [])
                     for u in units:
                         planned_units[u.get('name')] = u
-            
+
             # Load Apply Report
             applied_units = {}
             if os.path.exists('apply_report.json'):
@@ -101,14 +101,14 @@ jobs:
                     units = data if isinstance(data, list) else data.get('units', [])
                     for u in units:
                         applied_units[u.get('name')] = u
-            
+
             # Build Markdown Table Summary
-            lines = ["# 🏗️ Infrastructure Deployment Reconciliation Report\n"]
+            lines = ["### Infrastructure Deployment Reconciliation Report\n"]
             lines.append("| Module / Unit | Planned Changes? | Apply Status | Cause / Details |")
             lines.append("| :--- | :---: | :---: | :--- |")
-            
+
             all_names = sorted(list(set(list(planned_units.keys()) + list(applied_units.keys()))))
-            
+
             for name in all_names:
                 p_unit = planned_units.get(name, {})
                 a_unit = applied_units.get(name, {})
@@ -128,14 +128,14 @@ jobs:
                     status_icon = f"⚪ {result}"
             
                 lines.append(f"| `{name}` | {has_planned} | {status_icon} | {reason} |")
-            
+
             summary_markdown = "\n".join(lines)
-            
+
             # Write to GitHub Step Summary
             if "GITHUB_STEP_SUMMARY" in os.environ:
                 with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary_file:
                     summary_file.write(summary_markdown + "\n")
-            
+
             print(summary_markdown)
 
       - name: Upload errored state artifact
