@@ -53,6 +53,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Setup Environment
         uses: ./.github/actions/setup-tools
 
@@ -63,7 +68,7 @@ jobs:
             --report-format json
 
       - name: Terragrunt Apply
-        # if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         id: terragrunt_apply
         continue-on-error: true
         run: |
@@ -73,7 +78,7 @@ jobs:
 
       - name: Reconcile and Generate Infrastructure Report
         if: always()
-        uses: actions/python-script@v5
+        uses: jannekem/run-python-script-action@v1
         with:
           script: |
             import json
